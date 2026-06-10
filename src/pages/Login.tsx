@@ -30,9 +30,8 @@ export const Login = () => {
     };
 
     const handleZerodhaLogin = () => {
-        // Mock redirect to zerodha for development
         toast('Redirecting to Zerodha...', { icon: '🔄' });
-        window.open('https://kite.zerodha.com/connect/login', '_blank');
+        window.location.href = 'http://localhost:5001/auth/login';
     };
 
     return (

@@ -1,13 +1,29 @@
 
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { useAppContext } from '../../context/AppContext';
 
 export const Layout = () => {
-    const { loggedIn } = useAppContext();
+    const { loggedIn, setLoggedIn, setUserId } = useAppContext();
+    const [searchParams] = useSearchParams();
+    const location = useLocation();
 
-    if (!loggedIn) {
+    useEffect(() => {
+        if (searchParams.get('status') === 'success' || searchParams.get('user_id')) {
+            setLoggedIn(true);
+            if (searchParams.get('user_id')) {
+                setUserId(searchParams.get('user_id'));
+            }
+            window.history.replaceState({}, document.title, location.pathname);
+        }
+    }, [searchParams, setLoggedIn, setUserId, location.pathname]);
+
+    // Allow rendering temporarily if we have query parameters so useEffect can run
+    const isAuthRedirect = searchParams.get('status') === 'success' || searchParams.get('user_id');
+
+    if (!loggedIn && !isAuthRedirect) {
         return <Navigate to="/login" replace />;
     }
 
