@@ -6,6 +6,7 @@ import { Layout } from './components/layout/Layout';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Strategies } from './pages/Strategies';
+import { HealthMonitor } from './pages/HealthMonitor';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="strategies" element={<Strategies />} />
+            <Route path="health" element={<HealthMonitor />} />
           </Route>
         </Routes>
       </BrowserRouter>

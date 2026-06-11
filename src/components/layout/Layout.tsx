@@ -1,30 +1,19 @@
 
 import { Outlet, Navigate, useSearchParams, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { useAppContext } from '../../context/AppContext';
 
 export const Layout = () => {
-    const { loggedIn, setLoggedIn, setUserId } = useAppContext();
+    const { loggedIn } = useAppContext();
     const [searchParams] = useSearchParams();
     const location = useLocation();
 
-    useEffect(() => {
-        if (searchParams.get('status') === 'success' || searchParams.get('user_id')) {
-            setLoggedIn(true);
-            if (searchParams.get('user_id')) {
-                setUserId(searchParams.get('user_id'));
-            }
-            window.history.replaceState({}, document.title, location.pathname);
-        }
-    }, [searchParams, setLoggedIn, setUserId, location.pathname]);
+    if (!loggedIn) {
+        const query = searchParams.toString();
+        const loginTarget = query ? `/login?${query}` : '/login';
 
-    // Allow rendering temporarily if we have query parameters so useEffect can run
-    const isAuthRedirect = searchParams.get('status') === 'success' || searchParams.get('user_id');
-
-    if (!loggedIn && !isAuthRedirect) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to={loginTarget} replace state={{ from: location }} />;
     }
 
     return (
@@ -32,7 +21,7 @@ export const Layout = () => {
             <Sidebar />
             <div className="flex-1 flex flex-col">
                 <Header />
-                <main className="flex-1 p-6 overflow-auto">
+                <main className="flex-1 p-4 sm:p-6 overflow-auto">
                     <Outlet />
                 </main>
             </div>

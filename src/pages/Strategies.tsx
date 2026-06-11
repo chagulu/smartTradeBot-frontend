@@ -1,5 +1,5 @@
-/* eslint-disable */
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { StrategyForm } from '../components/ui/StrategyForm';
 import { StrategyListCard } from '../components/ui/StrategyListCard';
 import { strategyService } from '../services/strategyService';
@@ -9,21 +9,28 @@ export const Strategies = () => {
     const { activeStrategies, setActiveStrategies } = useAppContext();
     const [loading, setLoading] = useState(true);
 
-    const fetchStrategies = async () => {
+    const fetchStrategies = useCallback(async () => {
         setLoading(true);
         try {
             const res = await strategyService.getStatus();
             setActiveStrategies(res.active_strategies || []);
-        } catch (_error) {
-            console.error('Failed to fetch strategies');
+        } catch (error) {
+            console.error('Failed to fetch strategies', error);
+            toast.error('Strategy status refresh failed', { id: 'strategy-refresh-failed' });
         } finally {
             setLoading(false);
         }
-    };
+    }, [setActiveStrategies]);
 
     useEffect(() => {
-        fetchStrategies();
-    }, []);
+        const initialStrategyTimeout = window.setTimeout(fetchStrategies, 0);
+        const strategyInterval = setInterval(fetchStrategies, 15000);
+
+        return () => {
+            clearTimeout(initialStrategyTimeout);
+            clearInterval(strategyInterval);
+        };
+    }, [fetchStrategies]);
 
     return (
         <div className="space-y-6">

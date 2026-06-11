@@ -7,8 +7,9 @@ import { Loader } from '../components/ui/Loader';
 import { TrendingUp } from 'lucide-react';
 
 export const Login = () => {
-    const [requestToken, setRequestToken] = useState('');
-    const [userIdInput, setUserIdInput] = useState('');
+    const callbackParams = new URLSearchParams(window.location.search);
+    const [requestToken, setRequestToken] = useState(() => callbackParams.get('request_token') || '');
+    const [userIdInput, setUserIdInput] = useState(() => callbackParams.get('user_id') || '');
     const [loading, setLoading] = useState(false);
     const { setLoggedIn, setUserId } = useAppContext();
     const navigate = useNavigate();
@@ -30,7 +31,7 @@ export const Login = () => {
     };
 
     const handleZerodhaLogin = () => {
-        toast('Redirecting to Zerodha...', { icon: '🔄' });
+        toast('Opening Zerodha login');
         window.location.href = 'http://localhost:5001/auth/login';
     };
 
@@ -45,7 +46,7 @@ export const Login = () => {
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-8 px-4 shadow sm:rounded-xl sm:px-10 border border-gray-100">
+                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100">
                     <div className="mb-6">
                         <button
                             onClick={handleZerodhaLogin}

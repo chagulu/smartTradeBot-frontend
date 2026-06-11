@@ -1,16 +1,12 @@
-# SmartTradeBot Frontend Development Guide
+# SmartTradeBot Frontend Development Guide (EMA Strategy v2)
 
-## Project Overview
+## Objective
 
-Build a responsive frontend dashboard for SmartTradeBot, an algorithmic trading platform integrated with Zerodha Kite Connect.
-
-The frontend should interact with the existing Flask backend APIs.
+Develop a production-ready React frontend for SmartTradeBot that supports complete management of EMA-based automated trading strategies integrated with Zerodha.
 
 ---
 
 # Technology Stack
-
-Preferred:
 
 * React 19+
 * TypeScript
@@ -19,11 +15,9 @@ Preferred:
 * Axios
 * React Router
 * React Hook Form
+* React Hot Toast
+* Lucide React
 * Recharts
-
-Alternative:
-
-* HTML + Bootstrap + Vanilla JavaScript
 
 ---
 
@@ -31,213 +25,23 @@ Alternative:
 
 Development:
 
-```text
 http://localhost:5001
-```
 
 ---
 
-# Authentication Flow
-
-Current Backend Implementation:
-
-User logs into Zerodha manually.
-
-Frontend should:
-
-1. Redirect user to Zerodha login URL.
-2. Capture request_token from callback URL.
-3. Call backend login API.
-
----
-
-# Authentication APIs
-
-## Login
-
-Endpoint:
-
-```http
-POST /auth/login
-```
-
-Payload:
-
-```json
-{
-    "request_token": "generated_by_zerodha",
-    "user_id": "UPP323"
-}
-```
-
-Response:
-
-```json
-{
-    "message": "login_successful",
-    "user_id": "UPP323",
-    "access_token": "...",
-    "session_data": {}
-}
-```
-
-Store:
-
-```text
-user_id
-login status
-```
-
-Do NOT expose access token in UI.
-
----
-
-# Health API
-
-## Worker Status
-
-Endpoint:
-
-```http
-GET /worker/health
-```
-
-Response:
-
-```json
-{
-    "status": "ok",
-    "interval_seconds": 15
-}
-```
-
-Display:
-
-```text
-Worker Status: Running
-Evaluation Interval: 15 seconds
-```
-
----
-
-# Strategy APIs
-
-## Get Strategy Status
-
-Endpoint:
-
-```http
-GET /strategy/status
-```
-
-Response Example:
-
-```json
-{
-    "active_strategies": [
-        {
-            "id": 1,
-            "symbol": "INFY",
-            "ema_period": 100,
-            "quantity": 100,
-            "entry_buffer_percent": 0.0,
-            "profit_targets": [0.10, 0.20, 0.30],
-            "stop_loss": 0.15
-        }
-    ]
-}
-```
-
-Display:
-
-* Symbol
-* EMA Period
-* Quantity
-* Strategy Status (Active)
-* Action (Deactivate Strategy ID)
-
----
-
-## Activate Strategy
-
-Endpoint:
-
-```http
-POST /strategy/activate
-```
-
-Payload:
-
-```json
-{
-    "symbol": "INFY",
-    "ema_period": 100,
-    "quantity": 100,
-    "entry_buffer_percent": 0.0,
-    "profit_targets": [0.10, 0.20, 0.30],
-    "stop_loss": 0.15
-}
-```
-
-Response:
-
-```json
-{
-    "message": "strategy_activated",
-    "strategy_id": 1
-}
-```
-
----
-
-## Deactivate Strategy
-
-Endpoint:
-
-```http
-POST /strategy/deactivate
-```
-
-Payload:
-
-```json
-{
-    "strategy_id": 1
-}
-```
-
-Response:
-
-```json
-{
-    "message": "strategy_deactivated",
-    "strategy_id": 1
-}
-```
-
----
-
-# Frontend Pages
-
----
+# Pages Required
 
 ## Login Page
 
 Route:
 
-```text
 /login
-```
 
 Features:
 
-* Zerodha Login button
-* Request Token input field
-* User ID field
-
-Actions:
-
-Submit login payload to backend.
+* Login with Zerodha button
+* Logout support
+* Persist authentication state using Context + Local Storage
 
 ---
 
@@ -245,16 +49,16 @@ Submit login payload to backend.
 
 Route:
 
-```text
 /
-```
 
 Widgets:
 
-* Worker Health Status
-* Active Strategies List
-* Position Summary
-* Quick Actions
+1. Worker Health
+2. Strategy Summary
+3. Position Summary
+4. Total P&L
+5. Quick Actions
+6. Recent Activity
 
 ---
 
@@ -262,101 +66,305 @@ Widgets:
 
 Route:
 
-```text
 /strategies
-```
 
-Features:
+Purpose:
 
-* Activate Strategy
-* Deactivate Strategy
-* View Active Strategies
+Create, view, deactivate, pause, and monitor EMA strategies.
 
 ---
 
-# Activate Strategy Form
+# Strategy Activation Form
+
+The frontend MUST expose ALL strategy parameters supported by backend.
+
+---
+
+## General Information
 
 Fields:
 
-```text
-Symbol
-EMA Period
-Quantity
-Entry Buffer %
-Profit Targets % (can be comma-separated or dynamic fields)
-Stop Loss %
-```
+Symbol (text)
+
+EMA Period (number)
+
+Default:
+
+100
 
 Validation:
 
-```text
-Symbol is required
 EMA > 0
-Quantity > 0
-Profit Targets > 0
-Stop Loss > 0
-```
 
 ---
 
-# Dashboard Layout
+## Buy Window
 
-Header:
+Fields:
 
-```text
-SmartTradeBot
-Logged In User
-Logout Button
-```
+Buy Start Time
 
-Sidebar:
+Buy End Time
 
-```text
-Dashboard
-Strategies
-Health Monitor
-```
+Input Type:
 
-Main Content:
+time
 
-```text
-Worker Health Card
-Active Strategies Card
-```
+Default Values:
+
+15:15
+
+15:30
+
+Validation:
+
+End Time > Start Time
 
 ---
 
-# Worker Health Card
+## Profit Booking Configuration
+
+Fields:
+
+Stage 1 Profit %
+
+Stage 2 Profit %
+
+Stage 3 Profit %
+
+Defaults:
+
+10
+
+20
+
+30
+
+Validation:
+
+Stage 1 < Stage 2 < Stage 3
+
+All > 0
+
+---
+
+## Risk Management
+
+Fields:
+
+Stop Loss %
+
+Maximum Position Size
+
+Maximum Capital Allocation
+
+Maximum Daily Loss
+
+Defaults:
+
+Stop Loss = 15
+
+Maximum Position Size = 1000
+
+Capital Allocation = 50000
+
+Maximum Daily Loss = 5000
+
+Validation:
+
+All values > 0
+
+---
+
+# Activate Strategy API
+
+POST /strategy/activate
+
+Payload:
+
+{
+"symbol": "INFY",
+"ema_period": 100,
+"buy_time_start": "15:15",
+"buy_time_end": "15:30",
+"stage_1_profit_percent": 10,
+"stage_2_profit_percent": 20,
+"stage_3_profit_percent": 30,
+"stop_loss_percent": 15,
+"max_position_size": 1000,
+"max_capital_allocation": 50000,
+"max_daily_loss": 5000
+}
+
+---
+
+# Strategy Status API
+
+GET /strategy/status
+
+Expected Response:
+
+{
+"active_strategies": [
+{
+"id": 1,
+"symbol": "INFY",
+"ema_period": 100,
+"buy_time_start": "15:15",
+"buy_time_end": "15:30",
+"stage_1_profit_percent": 10,
+"stage_2_profit_percent": 20,
+"stage_3_profit_percent": 30,
+"stop_loss_percent": 15,
+"max_position_size": 1000,
+"max_capital_allocation": 50000,
+"max_daily_loss": 5000,
+"current_position_quantity": 250,
+"current_position_avg_price": 163.33,
+"total_pnl": 5400,
+"status": "ACTIVE",
+"stage_1_completed": true,
+"stage_2_completed": false,
+"stage_3_completed": false
+}
+]
+}
+
+---
+
+# Strategy Table Columns
 
 Display:
 
-```text
-Status
-Evaluation Interval
-```
-
-Example:
-
-```text
-Running
-15 Seconds
-```
-
----
-
-# Strategy Status Card
-
-Display:
-
-```text
 Strategy ID
+
 Symbol
+
 EMA Period
-Quantity
+
+Buy Window
+
 Profit Targets
+
 Stop Loss
-Actions: Deactivate Button
-```
+
+Current Position
+
+Average Price
+
+Total P&L
+
+Strategy Status
+
+Stage Progress
+
+Actions
+
+---
+
+# Stage Progress Display
+
+Show badges:
+
+Stage 1 Completed
+
+Stage 2 Completed
+
+Stage 3 Completed
+
+Examples:
+
+✓ Stage 1
+
+Pending Stage 2
+
+Pending Stage 3
+
+---
+
+# Strategy Actions
+
+Buttons:
+
+Deactivate
+
+Pause
+
+Resume
+
+Refresh
+
+Confirmation dialog required before destructive actions.
+
+---
+
+# Dashboard Cards
+
+Worker Status
+
+Display:
+
+Running / Offline
+
+Evaluation Interval
+
+Last Checked Timestamp
+
+---
+
+Position Summary
+
+Display:
+
+Total Active Strategies
+
+Total Quantity Held
+
+Total Capital Utilized
+
+Total Unrealized P&L
+
+---
+
+Quick Actions
+
+Buttons:
+
+Activate Strategy
+
+Manage Strategies
+
+Refresh Dashboard
+
+---
+
+# Worker Health API
+
+GET /worker/health
+
+Display:
+
+Worker Status
+
+Evaluation Interval
+
+Last Updated
+
+---
+
+# Polling Requirements
+
+Worker Health:
+
+30 seconds
+
+Strategy Status:
+
+15 seconds
+
+Dashboard Summary:
+
+30 seconds
 
 ---
 
@@ -364,162 +372,123 @@ Actions: Deactivate Button
 
 Use React Context.
 
-Global State:
+Persist:
 
-```typescript
-interface AppState {
-    userId: string;
-    loggedIn: boolean;
-    workerStatus: string;
-    activeStrategies: Strategy[];
-}
-```
+loggedIn
 
----
-
-# Axios Configuration
-
-Base URL:
-
-```typescript
-http://localhost:5001
-```
-
-Default Headers:
-
-```typescript
-Content-Type: application/json
-```
-
----
-
-# Error Handling
-
-Show toast notifications for:
-
-```text
-Login Failure
-Strategy Activation Failure
-Worker Offline
-API Timeout
-```
-
----
-
-# Loading States
-
-Display spinner while:
-
-```text
-Authenticating
-Fetching Worker Status
-Activating Strategy
-Fetching Strategy Status
-```
-
----
-
-# Polling
-
-Refresh worker health every:
-
-```text
-30 seconds
-```
-
-Refresh strategy status every:
-
-```text
-15 seconds
-```
+userId
 
 ---
 
 # Folder Structure
 
-```text
 src/
-  components/
-  pages/
-  services/
-  hooks/
-  context/
-  types/
-  utils/
-```
+
+components/
+
+pages/
+
+services/
+
+hooks/
+
+context/
+
+types/
+
+utils/
+
+layouts/
 
 ---
 
-# Components
+# Components Required
 
-```text
 Header
+
 Sidebar
+
 WorkerHealthCard
-StrategyListCard
+
+PositionSummaryCard
+
+QuickActionsCard
+
 StrategyForm
+
+StrategyListCard
+
+StrategyStatusBadge
+
+StageProgressBadge
+
 Loader
+
 ToastNotification
-```
 
----
-
-# Services
-
-```text
-authService.ts
-strategyService.ts
-workerService.ts
-```
+ConfirmationModal
 
 ---
 
 # TypeScript Interfaces
 
-```typescript
-interface WorkerHealth {
-    status: string;
-    interval_seconds: number;
-}
-
 interface Strategy {
-    id: number;
-    symbol: string;
-    ema_period: number;
-    quantity: number;
-    entry_buffer_percent: number;
-    profit_targets: number[];
-    stop_loss: number;
-}
+id: number;
+symbol: string;
+ema_period: number;
+
 ```
+buy_time_start: string;
+buy_time_end: string;
+
+stage_1_profit_percent: number;
+stage_2_profit_percent: number;
+stage_3_profit_percent: number;
+
+stop_loss_percent: number;
+
+max_position_size: number;
+max_capital_allocation: number;
+max_daily_loss: number;
+
+current_position_quantity: number;
+current_position_avg_price: number;
+
+total_pnl: number;
+
+status: 'ACTIVE' | 'PAUSED' | 'STOPPED' | 'COMPLETED';
+
+stage_1_completed: boolean;
+stage_2_completed: boolean;
+stage_3_completed: boolean;
+```
+
+}
 
 ---
 
 # Acceptance Criteria
 
-The frontend is complete when:
+Frontend is complete only when:
 
-* User can log in.
-* Worker health is displayed.
-* Strategy status is displayed accurately.
-* Strategy activation works with appropriate payload structure.
-* Strategy deactivation works via strategy ID.
-* Errors are handled gracefully.
-* Dashboard is responsive.
+✓ All EMA parameters can be configured.
 
----
+✓ Buy time window is configurable.
 
-# Future Enhancements
+✓ Risk management settings are configurable.
 
-Phase 2:
+✓ Active strategy table displays all strategy metrics.
 
-* Portfolio Page
-* Order History
-* Live Market Data
-* Real-Time WebSocket Updates
-* Multiple Strategies
-* Notifications
-* Dark Mode
-* Paper Trading
-* Backtesting
-* Multi-Broker Support
+✓ Strategy stages are visually represented.
+
+✓ Worker health is displayed.
+
+✓ Dashboard summaries update automatically.
+
+✓ Strategy activation succeeds using backend payload.
+
+✓ Strategy deactivation works.
+
+✓ Layout is responsive for desktop and tablet.
+
+✓ Authentication persists across refreshes.
